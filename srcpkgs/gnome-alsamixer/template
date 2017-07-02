@@ -1,0 +1,26 @@
+# Template file for 'gnome-alsamixer'
+pkgname=gnome-alsamixer
+version=0.9.7
+revision=1
+wrksrc="${pkgname}-${version}~cvs.20060916"
+make_build_args='MSGFMT_OPTS=-c LIBS+=-lm'
+configure_args="--disable-schemas-install --with-gconf-schema-file-dir=/usr/share/gconf/schemas"
+build_style=gnu-configure
+hostmakedepends="autoconf automake libtool m4 gnome-common pkg-config GConf-devel" #GConf-devel fixes errors when building for ARM
+makedepends="alsa-lib-devel GConf-devel gtk+-devel"
+depends="desktop-file-utils"
+short_desc="Gnome ALSA mixer"
+maintainer="ColdPhoenix <coldphoenix@interia.pl>"
+license="GPL-2"
+homepage="https://launchpad.net/gnome-alsamixer"
+distfiles="https://launchpad.net/ubuntu/+archive/primary/+files/gnome-alsamixer_${version}~cvs.20060916.ds.1.orig.tar.gz"
+checksum=da07fdeb0eb82a3ceb8047a4b564ef5a334ba8964c1a798e5b4fc69878d69d20
+patch_args="-p1"
+
+pre_configure() {
+	autoreconf -fi
+}
+
+post_install() {
+	vinstall "${FILESDIR}/gnome-alsamixer.desktop" 644 /usr/share/applications/
+}
