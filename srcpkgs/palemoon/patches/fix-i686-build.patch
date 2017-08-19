@@ -1,0 +1,40 @@
+diff -Naur ../Pale-Moon-27.4.1_Release.orig/dom/canvas/CanvasRenderingContext2D.cpp ./dom/canvas/CanvasRenderingContext2D.cpp
+--- ../Pale-Moon-27.4.1_Release.orig/dom/canvas/CanvasRenderingContext2D.cpp	2017-07-26 23:23:50.000000000 +0200
++++ ./dom/canvas/CanvasRenderingContext2D.cpp	2017-08-19 03:02:22.111747245 +0200
+@@ -2417,8 +2417,8 @@
+   // The values of canvas API input are in double precision, but Moz2D APIs are
+   // using float precision. Bypass canvas API calls when the input is out of
+   // float precision to avoid precision problem
+-  if (!std::isfinite((float)aX) | !std::isfinite((float)aY) |
+-      !std::isfinite((float)aWidth) | !std::isfinite((float)aHeight)) {
++  if (!isfinite((float)aX) | !isfinite((float)aY) |
++      !isfinite((float)aWidth) | !isfinite((float)aHeight)) {
+     return false;
+   }
+
+diff -Naur ../Pale-Moon-27.4.1_Release.orig/mfbt/decimal/Decimal.cpp ./mfbt/decimal/Decimal.cpp
+--- ../Pale-Moon-27.4.1_Release.orig/mfbt/decimal/Decimal.cpp	2017-07-26 23:23:50.000000000 +0200
++++ ./mfbt/decimal/Decimal.cpp	2017-08-19 03:42:50.897208923 +0200
+@@ -33,6 +33,9 @@
+ 
+ #include <algorithm>
+ #include <float.h>
++#include <math.h>
++
++int _isinf(double x) { return fabs(x) > DBL_MAX; }
+ 
+ using namespace moz_decimal_utils;
+ 
+@@ -686,10 +689,10 @@
+ 
+ Decimal Decimal::fromDouble(double doubleValue)
+ {
+-    if (std::isfinite(doubleValue))
++    if (isfinite(doubleValue))
+         return fromString(mozToString(doubleValue));
+ 
+-    if (std::isinf(doubleValue))
++    if (_isinf(doubleValue))
+         return infinity(doubleValue < 0 ? Negative : Positive);
+ 
+     return nan();

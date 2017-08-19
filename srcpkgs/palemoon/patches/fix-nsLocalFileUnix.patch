@@ -1,0 +1,14 @@
+diff -Naur ../Pale-Moon-27.4.1_Release.orig/xpcom/io/nsLocalFileUnix.cpp ./xpcom/io/nsLocalFileUnix.cpp
+--- ../Pale-Moon-27.4.1_Release.orig/xpcom/io/nsLocalFileUnix.cpp	2017-07-26 23:23:50.000000000 +0200
++++ ./xpcom/io/nsLocalFileUnix.cpp	2017-08-19 06:26:48.849200300 +0200
+@@ -30,6 +30,10 @@
+ #include <sys/quota.h>
+ #endif
+ 
++#ifndef BLOCK_SIZE
++#define BLOCK_SIZE 1024 /* kernel block size */
++#endif
++
+ #include "xpcom-private.h"
+ #include "nsDirectoryServiceDefs.h"
+ #include "nsCRT.h"

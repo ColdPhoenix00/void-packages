@@ -1,0 +1,119 @@
+# Template file for 'palemoon'
+pkgname=palemoon
+version=27.4.1
+revision=1
+short_desc="Open source web browser based on Firefox focusing on efficiency"
+maintainer="ColdPhoenix <coldphoenix@interia.pl>"
+homepage="https://www.palemoon.org"
+license="MPL-2.0, GPL-2, LGPL-2.1"
+distfiles="https://github.com/MoonchildProductions/Pale-Moon/archive/${version}_Release.tar.gz"
+checksum=02aa1568a7af60a4f79ca6c82d1389f5c80365576e57ae050d12e6af5b2a2650
+
+only_for_archs="i686 i686-musl x86_64 x86_64-musl"
+wrksrc="Pale-Moon-${version}_Release"
+
+hostmakedepends="autoconf213 zip unzip yasm python perl pkg-config"
+makedepends="
+	gtk+-devel libXt-devel icu-devel nss-devel libevent-devel hunspell-devel libvpx-devel sqlite-devel
+	$(vopt_if alsa alsa-lib-devel) $(vopt_if dbus dbus-glib-devel)
+	$(vopt_if pulseaudio pulseaudio-devel) $(vopt_if startup_notification startup-notification-devel)
+	$(vopt_if xscreensaver libXScrnSaver-devel)"
+depends="desktop-file-utils hicolor-icon-theme"
+
+case "$XBPS_TARGET_MACHINE" in
+	*-musl)
+	makedepends+=" musl-fts-devel"
+	;;
+esac
+
+build_options="alsa dbus pulseaudio startup_notification xscreensaver"
+build_options_default="alsa dbus pulseaudio startup_notification xscreensaver"
+
+do_build() {
+	sed 's#%SRCDIR%#'"${wrksrc}"'#g' "${FILESDIR}/mozconfig.in" > mozconfig
+
+	export MOZBUILD_STATE_PATH="${wrksrc}/mozbuild"
+	export MOZCONFIG="${wrksrc}/mozconfig"
+	export CPPFLAGS="$CPPFLAGS -O2"
+	export LDFLAGS="-Wl,-rpath=/usr/lib/firefox"
+	export MOZ_MAKE_FLAGS="${makejobs}"
+
+	case "$XBPS_TARGET_MACHINE" in
+	*-musl)
+		echo "ac_add_options --disable-jemalloc" >> mozconfig
+		echo "ac_add_options --enable-gold=no" >> mozconfig
+		CFLAGS+=" -D_GLIBCXX_USE_CXX11_ABI=0 -lfts"
+		CPPFLAGS+=" -D_GLIBCXX_USE_CXX11_ABI=0 -lfts"
+		;;
+	esac
+
+	if [ "$CROSS_BUILD" ]; then
+		export HOST_CFLAGS="${XBPS_CFLAGS}"
+		export HOST_CXXFLAGS="${XBPS_CXXFLAGS}"
+		export ac_cv_sqlite_secure_delete=yes \
+			ac_cv_sqlite_threadsafe=yes \
+			ac_cv_sqlite_enable_fts3=yes \
+			ac_cv_sqlite_dbstat_vtab=yes \
+			ac_cv_sqlite_enable_unlock_notify=yes \
+			ac_cv_prog_hostcxx_works=1
+		echo "ac_add_options --target=$XBPS_CROSS_TRIPLET" >> mozconfig
+	fi
+
+	if [ ${XBPS_GCC_VERSION_MAJOR} -gt 5 ]; then
+		# Append CFLAGS and CXXFLAGS to set work around code which gcc6 would
+		# otherwise regard as out-of-specification and allow it to produce a
+		# working program.
+		export CFLAGS+=" -fno-delete-null-pointer-checks -fno-lifetime-dse -fno-schedule-insns2"
+		export CXXFLAGS+=" -fno-delete-null-pointer-checks -fno-lifetime-dse -fno-schedule-insns2"
+	fi
+
+	case "$XBPS_TARGET_MACHINE" in
+	i686)
+		export CFLAGS+=" -D_FILE_OFFSET_BITS=64 -D_GLIBCXX_USE_CXX11_ABI=0"
+		export CXXFLAGS+=" -D_FILE_OFFSET_BITS=64 -D_GLIBCXX_USE_CXX11_ABI=0"
+		;;
+	esac
+
+	cat <<! >> mozconfig
+ac_add_options $(vopt_enable alsa)
+ac_add_options $(vopt_enable dbus)
+ac_add_options $(vopt_enable dbus necko-wifi)
+ac_add_options $(vopt_enable pulseaudio)
+ac_add_options $(vopt_enable startup_notification startup-notification)
+!
+	python2 mach build
+	python2 mach build #Again
+}
+
+do_install() {
+	cd pmbuild
+	make package
+
+	cd dist
+	install -d "${DESTDIR}"/usr/{bin,lib}
+	cp -r palemoon/ "${DESTDIR}/usr/lib/palemoon"
+	ln -s "../lib/palemoon/palemoon" "${DESTDIR}/usr/bin/palemoon"
+
+	# icons
+	install -Dm644 palemoon/browser/chrome/icons/default/default16.png \
+	  "${DESTDIR}/usr/share/icons/hicolor/16x16/apps/$pkgname.png"
+	install -Dm644 palemoon/browser/chrome/icons/default/default32.png \
+	  "${DESTDIR}/usr/share/icons/hicolor/32x32/apps/$pkgname.png"
+	install -Dm644 palemoon/browser/chrome/icons/default/default48.png \
+	  "${DESTDIR}/usr/share/icons/hicolor/48x48/apps/$pkgname.png"
+	install -Dm644 palemoon/browser/icons/mozicon128.png \
+	  "${DESTDIR}/usr/share/icons/hicolor/128x128/apps/$pkgname.png"
+
+	# use system-provided dictionaries
+	rm -rf "${DESTDIR}"/usr/lib/$pkgname/{dictionaries,hyphenation}
+	ln -s /usr/share/hunspell "$DESTDIR/usr/lib/$pkgname/dictionaries"
+	ln -s /usr/share/hyphen "$DESTDIR/usr/lib/$pkgname/hyphenation"
+
+	# avoid duplicate binaries
+	# https://bugzilla.mozilla.org/show_bug.cgi?id=658850
+	#ln -sf palemoon "${DESTDIR}/usr/lib/$pkgname/palemoon-bin"
+	rm -f "${DESTDIR}/usr/lib/$pkgname/palemoon-bin"
+
+	# install desktop file
+	install -Dm644 "${wrksrc}/browser/branding/official/palemoon.desktop" "${DESTDIR}/usr/share/applications/palemoon.desktop"
+}

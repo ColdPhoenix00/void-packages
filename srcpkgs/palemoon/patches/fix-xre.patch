@@ -1,0 +1,19 @@
+diff -Naur ../Pale-Moon-27.4.1_Release.orig/toolkit/xre/nsSigHandlers.cpp ./toolkit/xre/nsSigHandlers.cpp
+--- ../Pale-Moon-27.4.1_Release.orig/toolkit/xre/nsSigHandlers.cpp	2017-07-26 23:23:50.000000000 +0200
++++ ./toolkit/xre/nsSigHandlers.cpp	2017-08-19 07:17:18.123875415 +0200
+@@ -20,6 +20,15 @@
+ #include "prenv.h"
+ #include "nsDebug.h"
+ #include "nsXULAppAPI.h"
++#include <stdint.h>
++
++#ifndef __uint32_t
++#define __uint32_t uint32_t
++#endif
++
++#ifndef __uint16_t
++#define __uint16_t uint16_t
++#endif
+ 
+ #if defined(LINUX)
+ #include <sys/time.h>
