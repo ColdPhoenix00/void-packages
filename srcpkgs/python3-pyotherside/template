@@ -1,0 +1,19 @@
+# Template file for 'python3-pyotherside'
+pkgname=python3-pyotherside
+version=1.5.3
+revision=1
+wrksrc=pyotherside-${version}
+build_style=qmake
+hostmakedepends="qt5-qmake qt5-tools-devel"
+makedepends="python3-devel qt5-tools-devel qt5-declarative-devel qt5-svg-devel"
+short_desc="Asynchronous Python3 Bindings for Qt5"
+maintainer="ColdPhoenix <coldphoenix@interia.pl>"
+license="ISC"
+homepage="https://thp.io/2011/pyotherside"
+distfiles="https://github.com/thp/pyotherside/archive/${version}.tar.gz"
+checksum=00049d5f42cac448368bc2a521edb8de36bb6d2a624e195b7f1004236758b805
+nocross=yes
+
+post_install() {
+	vlicense LICENSE
+}

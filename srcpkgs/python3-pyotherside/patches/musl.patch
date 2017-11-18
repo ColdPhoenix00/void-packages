@@ -1,0 +1,11 @@
+diff -Naur ../pyotherside-1.5.3.old/src/global_libpython_loader.cpp ./src/global_libpython_loader.cpp
+--- ../pyotherside-1.5.3.old/src/global_libpython_loader.cpp	2017-11-18 23:06:00.230914048 +0100
++++ ./src/global_libpython_loader.cpp	2017-11-18 23:07:01.178020546 +0100
+@@ -17,6 +17,7 @@
+  **/
+ 
+ #include "global_libpython_loader.h"
++#include <dlfcn.h>
+ 
+ namespace GlobalLibPythonLoader {
+ 
