@@ -1,0 +1,31 @@
+# Template file for 'yubioath-desktop'
+pkgname=yubioath-desktop
+version=4.2.0
+revision=1
+wrksrc=${pkgname}-${pkgname}-${version}
+build_style=qmake
+hostmakedepends="git python qt5-tools qt5-qmake"
+makedepends="pcsclite-devel pcsc-ccid libyubikey-devel qt5-quickcontrols qt5-declarative-devel"
+depends="desktop-file-utils python3-pyotherside"
+short_desc="Cross-platform password generator"
+maintainer="ColdPhoenix <coldphoenix@interia.pl>"
+license="BSD"
+homepage="https://developers.yubico.com/yubioath-desktop"
+distfiles="https://github.com/Yubico/yubioath-desktop/archive/yubioath-desktop-${version}.tar.gz"
+checksum=7727a452bf9329ee5ba16b9b7a540ae6a775d8c998e294aa39f1e6f4bf9ac391
+
+if [ -n $CROSS_BUILD ]; then
+	hostmakedepends+=" qt5-host-tools qt5-declarative-devel"
+fi
+
+pre_configure() {
+	git -C vendor clone https://github.com/qtproject/qt-solutions.git
+	git -C vendor clone https://github.com/Yubico/yubikey-manager.git
+	git -C vendor clone https://github.com/thp/pyotherside.git
+}
+
+post_install() {
+	vinstall resources/yubioath-desktop.desktop 0644 /usr/share/applications/
+	vinstall resources/icons/yubioath.png 0644 /usr/share/pixmaps/
+	vlicense COPYING
+}
